@@ -1,0 +1,38 @@
+---
+name: Build
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run build
+        run: |
+          sudo ./configure
+          make
+          ls -al
+          make -C uefi
+          ls -al uefi
+          tar cJf _all-bios-images.tar.xz *img
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          title: bios-images
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: "latest"
+          files: |
+            *.img
+            uefi/hello.efi
+            _all-bios-images.tar.xz
